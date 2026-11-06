@@ -19,6 +19,7 @@ flowchart LR
     A -->|reason, transcript| E[EscalateToHuman<br/>sub-workflow]
     E --> D[Discord alert<br/>#support-escalations]
     E --> L[(support_escalations<br/>table)]
+    X[Error Trigger<br/>any failure] --> AL[Discord alert<br/>#automation-alerts]
 ```
 
 ## The rules the agent follows (system message)
@@ -61,6 +62,16 @@ The `Northwind Escalation` sub-workflow starts with **When Executed by Another W
 1. **Discord** (webhook) posts the reason, customer, session and recent messages to `#support-escalations`
 2. **Data Table** inserts a row into `support_escalations` for tracking
 
+## Error alerts
+
+`Northwind Error Alerts` starts with an **Error Trigger** and posts to a separate Discord channel, `#automation-alerts`. Both the agent and the escalation workflow name it as their **Error Workflow**, so if a model call, a tool or the handoff fails, the team gets the workflow name, the failed step, the error message and a link to the run.
+
+Escalations (a customer needs a person) and failures (the system needs a person) go to different channels on purpose, so neither gets buried.
+
+![Error workflow setting](docs/screenshots/error-settings.png)
+
+![Failure alert in Discord (n8n test event)](docs/screenshots/error-alert.png)
+
 ## Test results
 
 | # | Customer says | Expected | Result |
@@ -98,7 +109,8 @@ In `data/`: 8 customers, 12 orders, 10 FAQ answers, all fictional, emails on the
 1. Create four n8n Data Tables and import the CSVs: `support_customers`, `support_orders`, `support_faq`, plus an empty `support_escalations` (columns: session_id, customer_id, reason, transcript_snippet)
 2. Import `workflows/northwind-escalation.json`. Add a Discord webhook credential. Re-select the `support_escalations` table. Save.
 3. Import `workflows/northwind-support-agent.json`. Connect an OpenAI credential. Re-select the three tables in the tools and the escalation workflow in `EscalateToHuman` (values marked `REPLACE_AFTER_IMPORT`).
-4. Open the chat and run the five test messages above.
+4. Import `workflows/northwind-error-alerts.json` and add a second Discord webhook credential (for `#automation-alerts`). In both other workflows, open **Settings → Error Workflow** and pick `Northwind Error Alerts`.
+5. Open the chat and run the five test messages above.
 
 The exported workflows were cleaned with `scripts/sanitize_workflow.py`: credentials, instance ID, webhook IDs and table IDs are removed.
 
@@ -108,7 +120,6 @@ The exported workflows were cleaned with `scripts/sanitize_workflow.py`: credent
 - **Simple Memory is in-process.** It's lost when n8n restarts and can't be shared across instances. Production would use Postgres or Redis chat memory.
 - **Exact-match lookups.** GetCustomer needs the exact email; SearchFAQ needs an exact topic. A vector store would handle free-form questions.
 - **No identity check.** Anyone who types an email sees that customer's orders. Production needs a verified login or a one-time code before showing account data.
-- **No error workflow yet.** Tool or model failures aren't alerted. Next step: an n8n Error Workflow posting to `#automation-alerts`.
 - **Sample scale.** 8 customers in a trial instance.
 
 ## Contact

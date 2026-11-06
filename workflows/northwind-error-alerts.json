@@ -1,0 +1,49 @@
+{
+  "name": "Northwind Error Alerts",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        32,
+        0
+      ],
+      "id": "98598cc5-01ae-4280-b2d5-f1a3ec414709",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "=\ud83d\udea8 Workflow failed\nWorkflow: {{ $json.workflow.name }}\nFailed step: {{ $json.execution.lastNodeExecuted }}\nError: {{ $json.execution.error.message }}\nTime: {{ $now.toFormat('yyyy-MM-dd HH:mm') }}\nDetails: {{ $json.execution.url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        256,
+        0
+      ],
+      "id": "148d188e-4ed5-403d-93f9-0a6f7cc88c8c",
+      "name": "Discord"
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Discord",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": []
+}
