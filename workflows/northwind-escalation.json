@@ -1,0 +1,150 @@
+{
+  "name": "Northwind Escalation",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "session_id"
+            },
+            {
+              "name": "customer_id"
+            },
+            {
+              "name": "reason"
+            },
+            {
+              "name": "transcript_snippet"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -48,
+        0
+      ],
+      "id": "ac285cdf-93b2-42f9-9329-9458a01ca919",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "=Support escalation\nReason: {{ $json.reason }}\nCustomer: {{ $json.customer_id }}\nSession: {{ $json.session_id }}\nLast messages:\n{{ $json.transcript_snippet }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        176,
+        0
+      ],
+      "id": "7aa2ea1d-58b2-4e27-aa18-967cbec38af1",
+      "name": "Discord"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "REPLACE_AFTER_IMPORT",
+          "cachedResultName": "support_escalations"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "session_id": "={{ $('When Executed by Another Workflow').item.json.session_id }}",
+            "customer_id": "={{ $('When Executed by Another Workflow').item.json.customer_id }}",
+            "reason": "={{ $('When Executed by Another Workflow').item.json.reason }}",
+            "transcript_snippet": "={{ $('When Executed by Another Workflow').item.json.transcript_snippet }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "customer_id",
+              "displayName": "customer_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "transcript_snippet",
+              "displayName": "transcript_snippet",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        400,
+        0
+      ],
+      "id": "ee8bf4dd-3fd4-4478-aaf5-0b1fd35e54de",
+      "name": "Insert row"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Discord",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord": {
+      "main": [
+        [
+          {
+            "node": "Insert row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": []
+}

@@ -1,0 +1,313 @@
+{
+  "name": "Northwind Support Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "5d2d61d6-823a-4457-ba26-bed836436fee",
+      "name": "When chat message received"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are the support assistant for Northwind Solar Co-op (a fictional company; all data is sample data).\nRules:\n1. For any account, order, or install question, first call GetCustomer with the customer's email, then call GetOrders with the customer_id it returns. Answer only from tool results.\n2. If the customer hasn't given an email, ask for it before looking anything up.\n3. For policy questions (warranty, billing, install timelines), call SearchFAQ and answer only from it.\n4. If the tools return nothing relevant, say \"I don't know\" plainly. Never guess order status, dates, prices, or policy.\n5. Call EscalateToHuman when: you can't answer after using the tools, the customer asks for a person, or the topic is a complaint, refund, or safety issue. Tell the customer a teammate will follow up.\n6. Keep answers short and friendly. Never ask for passwords or payment details.\n7. Before calling EscalateToHuman: if the customer has given an email anywhere in this conversation, call GetCustomer first and pass its customer_id. For transcript_snippet, include the customer's earlier messages from this conversation too (up to 5), not just the last one."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "606d63e6-188a-41fe-b43f-a55fc303e3c9",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -16,
+        240
+      ],
+      "id": "c5bbb54e-b1fc-4e77-86bf-2bd38bec0d2a",
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        240,
+        240
+      ],
+      "id": "639a0ddc-778f-4f7b-a456-c5516ec19ba3",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Look up a customer by their email address. Returns customer_id, name, plan and city.",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "REPLACE_AFTER_IMPORT",
+          "cachedResultName": "support_customers"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "email",
+              "keyValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('conditions0_Value', `The customer's email address, for example jane.doe@example.com`, 'string') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTableTool",
+      "typeVersion": 1.1,
+      "position": [
+        480,
+        240
+      ],
+      "id": "9eb8015b-eb30-483d-8ca0-05c4e1089d5a",
+      "name": "GetCustomer"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Get all orders for a customer_id (format C-1001). Returns product, status, install_date and notes. Call GetCustomer first to get the customer_id.",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "REPLACE_AFTER_IMPORT",
+          "cachedResultName": "support_orders"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "customer_id",
+              "keyValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('conditions0_Value', `The customer_id from GetCustomer, for example C-1001`, 'string') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTableTool",
+      "typeVersion": 1.1,
+      "position": [
+        704,
+        240
+      ],
+      "id": "0cdd5115-8e2d-4206-8731-f1fa26806f3b",
+      "name": "GetOrders"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Look up company policy: warranty, billing, install timelines, permits, financing, cancellation, maintenance, HOA, outages.",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "REPLACE_AFTER_IMPORT",
+          "cachedResultName": "support_faq"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "topic",
+              "keyValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('conditions0_Value', `Exactly one of: battery_warranty, panel_warranty, install_timeline, permits, billing, financing, cancellation, maintenance, hoa, outage`, 'string') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTableTool",
+      "typeVersion": 1.1,
+      "position": [
+        592,
+        240
+      ],
+      "id": "e1f5d698-5427-473b-b2ce-a6d6916d4b5a",
+      "name": "SearchFAQ"
+    },
+    {
+      "parameters": {
+        "description": "Hand the conversation to a human teammate. Use when you can't answer after using the tools, the customer asks for a person, or the topic is a complaint, refund, or safety issue.",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REPLACE_AFTER_IMPORT",
+          "cachedResultName": "Northwind Escalation"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "session_id": "={{ $('When chat message received').item.json.sessionId }}",
+            "customer_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('customer_id', `The customer_id from GetCustomer, or \"unknown\"`, 'string') }}",
+            "reason": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('reason', `Short reason, for example: refund request, complaint, can't answer`, 'string') }}",
+            "transcript_snippet": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('transcript_snippet', `The last 3-5 messages, each starting with Customer: or Agent:`, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "customer_id",
+              "displayName": "customer_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "transcript_snippet",
+              "displayName": "transcript_snippet",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        848,
+        240
+      ],
+      "id": "11e1b8cb-ca77-4aee-8af4-0673ce1b503f",
+      "name": "EscalateToHuman"
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        []
+      ]
+    },
+    "GetCustomer": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GetOrders": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SearchFAQ": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EscalateToHuman": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": []
+}

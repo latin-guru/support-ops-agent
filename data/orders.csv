@@ -1,0 +1,13 @@
+order_id,customer_id,product,status,install_date,amount_usd,notes
+O-5001,C-1001,8 kW rooftop solar system,Install scheduled,2026-11-18,21400,Crew arrives 8-10 AM
+O-5002,C-1001,13.5 kWh home battery add-on,Waiting on utility permit,,11200,Install date set after permit approval
+O-5003,C-1002,6 kW rooftop solar system,Installed,2025-01-22,16900,
+O-5004,C-1003,10 kW rooftop solar system,Installed,2026-03-05,26300,
+O-5005,C-1003,13.5 kWh home battery,Installed,2026-03-05,11200,
+O-5006,C-1004,13.5 kWh home battery,Shipped,2026-11-12,11200,Delivery confirmed for Nov 10
+O-5007,C-1005,5 kW rooftop solar system,Site survey scheduled,,14100,Survey on 2026-11-09
+O-5008,C-1006,9 kW rooftop solar system,Installed,2023-10-30,23800,
+O-5009,C-1006,Panel cleaning service,Completed,2026-05-14,180,
+O-5010,C-1007,7 kW rooftop solar system,Waiting on HOA approval,,18600,
+O-5011,C-1008,8 kW rooftop solar system,Installed,2026-01-15,21400,
+O-5012,C-1008,13.5 kWh home battery,Install scheduled,2026-11-25,11200,Crew arrives 12-2 PM
